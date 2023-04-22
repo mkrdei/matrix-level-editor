@@ -9,8 +9,8 @@ public class LevelEditor : EditorWindow
 {
     private int matrixCount = 2;
     public int levelNumber = 1;
-    public int width = 10;
-    public int height = 10;
+    public int width = 5;
+    public int height = 5;
     public int tileSize = 64;
     private TileType selectedType = TileType.Empty;
 
