@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine.Tilemaps;
 using System.Linq;
+using Codice.Client.BaseCommands.Fileinfo;
+using Unity.VisualScripting.YamlDotNet.Core.Tokens;
 
 public class LevelEditor : EditorWindow
 {
@@ -49,11 +51,19 @@ public class LevelEditor : EditorWindow
 
     private void OnGUI()
     {
+
         // Options for setting level size and tile size
         GUILayout.Label("Level Settings", EditorStyles.boldLabel);
         levelNumber = EditorGUILayout.IntField("Level Number", levelNumber);
-        width = EditorGUILayout.IntField("Width", width);
-        height = EditorGUILayout.IntField("Height", height);
+        int editorWidth = EditorGUILayout.IntField("Width", width);
+        int editorHeight = EditorGUILayout.IntField("Height", height);
+        if (editorWidth != width || editorHeight != height)
+        {
+            tileDataList = new List<Dictionary<Vector2Int, string>>();
+            ClearTiles();
+        }
+        width = editorWidth;
+        height = editorHeight;
         tileSize = EditorGUILayout.IntField("Tile Size", tileSize);
 
         // Dropdown menu for selecting current tile type
@@ -165,10 +175,12 @@ public class LevelEditor : EditorWindow
             }
             MatrixData matrixData = new MatrixData(matrixIndex, dataList);
             matrixDataList.Add(matrixData);
+            
         }
-
+        
         LevelData levelData = new LevelData(width, height, tileSize, matrixDataList, tileDataList);
         string jsonData = JsonUtility.ToJson(levelData, true);
+
         using (FileStream fs = new FileStream(filePath, FileMode.Create))
         {
             using (StreamWriter writer = new StreamWriter(fs))
@@ -176,6 +188,7 @@ public class LevelEditor : EditorWindow
                 writer.Write(jsonData);
             }
         }
+
         Debug.Log("Level saved to " + filePath);
     }
     private void LoadLevel()
