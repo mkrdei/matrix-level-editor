@@ -6,6 +6,9 @@ using UnityEngine.Tilemaps;
 using System.Linq;
 using Codice.Client.BaseCommands.Fileinfo;
 using Unity.VisualScripting.YamlDotNet.Core.Tokens;
+using Firebase.Firestore;
+using Firebase.Extensions;
+using System;
 
 public class LevelEditor : EditorWindow
 {
@@ -18,6 +21,7 @@ public class LevelEditor : EditorWindow
 
     public Dictionary<Vector2Int, string> tileData = new Dictionary<Vector2Int, string>();
     private Dictionary<string, Texture2D> tileTextures = new Dictionary<string, Texture2D>();
+    FirebaseFirestore db;
 
     [MenuItem("Window/Level Editor")]
     public static void ShowWindow()
@@ -27,6 +31,7 @@ public class LevelEditor : EditorWindow
 
     private void OnEnable()
     {
+        db = FirebaseFirestore.DefaultInstance;
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
@@ -161,8 +166,7 @@ public class LevelEditor : EditorWindow
 
     private void SaveLevel()
     {
-        string filePath = "Assets/Resources/Levels/level " + levelNumber + ".json";
-
+        db = FirebaseFirestore.DefaultInstance;
         List<MatrixData> matrixDataList = new List<MatrixData>();
         for (int matrixIndex = 0; matrixIndex < matrixCount; matrixIndex++)
         {
@@ -175,55 +179,57 @@ public class LevelEditor : EditorWindow
             }
             MatrixData matrixData = new MatrixData(matrixIndex, dataList);
             matrixDataList.Add(matrixData);
-            
         }
         
         LevelData levelData = new LevelData(width, height, tileSize, matrixDataList, tileDataList);
         string jsonData = JsonUtility.ToJson(levelData, true);
-
-        using (FileStream fs = new FileStream(filePath, FileMode.Create))
+        
+        Dictionary<string, string> levelDic = new Dictionary<string, string>
         {
-            using (StreamWriter writer = new StreamWriter(fs))
-            {
-                writer.Write(jsonData);
-            }
-        }
+            { "Level " + levelNumber, jsonData }
+        };
+        db.Collection("CardinalChains").Document("Levels").SetAsync(levelDic);
 
-        Debug.Log("Level saved to " + filePath);
+        Debug.Log("Level saved");
     }
     private void LoadLevel()
     {
-        string filePath = "Assets/Resources/Levels/level " + levelNumber + ".json";
-        if (File.Exists(filePath))
+        DocumentReference docRef = db.Collection("CardinalChains").Document("Levels");
+        docRef.GetSnapshotAsync().ContinueWithOnMainThread(task =>
         {
-            string jsonData = File.ReadAllText(filePath);
-            LevelData levelData = JsonUtility.FromJson<LevelData>(jsonData);
-
-            // Apply level settings
-            width = levelData.width;
-            height = levelData.height;
-            tileSize = levelData.tileSize;
-            matrixCount = levelData.matrixDataList.Count;
-
-            // Apply tile data
-            tileDataList.Clear();
-            foreach (MatrixData matrixData in levelData.matrixDataList)
+            DocumentSnapshot snapshot = task.Result;
+            if (snapshot.Exists)
             {
-                Dictionary<Vector2Int, string> matrixTileData = new Dictionary<Vector2Int, string>();
-                foreach (TileData tileData in matrixData.tiles)
-                {
-                    matrixTileData[tileData.pos] = tileData.type;
-                }
-                tileDataList.Add(matrixTileData);
-            }
+                Dictionary<string, object> levelDic = snapshot.ToDictionary();
+                string jsonData = (string)levelDic["Level " + levelNumber];
+                LevelData levelData = JsonUtility.FromJson<LevelData>(jsonData);
 
-            Repaint();
-            Debug.Log("Level loaded from " + filePath);
-        }
-        else
-        {
-            Debug.LogError("Level file not found at " + filePath);
-        }
+                // Apply level settings
+                width = levelData.width;
+                height = levelData.height;
+                tileSize = levelData.tileSize;
+                matrixCount = levelData.matrixDataList.Count;
+
+                // Apply tile data
+                tileDataList.Clear();
+                foreach (MatrixData matrixData in levelData.matrixDataList)
+                {
+                    Dictionary<Vector2Int, string> matrixTileData = new Dictionary<Vector2Int, string>();
+                    foreach (TileData tileData in matrixData.tiles)
+                    {
+                        matrixTileData[tileData.pos] = tileData.type;
+                    }
+                    tileDataList.Add(matrixTileData);
+                }
+
+                Repaint();
+                Debug.Log("Level loaded");
+            }
+            else
+            {
+                Debug.Log(String.Format("Document {0} does not exist!", snapshot.Id));
+            }
+        });
     }
 
 

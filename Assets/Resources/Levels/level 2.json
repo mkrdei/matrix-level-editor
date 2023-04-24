@@ -1,7 +1,7 @@
 {
     "width": 7,
     "height": 7,
-    "tileSize": 64,
+    "tileSize": 45,
     "matrixDataList": [
         {
             "matrixIndex": 0,
@@ -235,6 +235,14 @@
         },
         {
             "matrixIndex": 1,
+            "tiles": []
+        },
+        {
+            "matrixIndex": 2,
+            "tiles": []
+        },
+        {
+            "matrixIndex": 3,
             "tiles": []
         }
     ]

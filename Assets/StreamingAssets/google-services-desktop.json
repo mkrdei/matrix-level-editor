@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "999464930795",
+    "project_id": "puzzle-master-dev",
+    "storage_bucket": "puzzle-master-dev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:999464930795:android:c381d71d91464c917a9dae",
+        "android_client_info": {
+          "package_name": "com.mafiagames.cardinalchains"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "999464930795-58ndfk51jt96udoj9ck32b28guhecgut.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSoL1rLVUgAlk8uATnMjeIXxOcJaH16FI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "999464930795-58ndfk51jt96udoj9ck32b28guhecgut.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "999464930795-4vk96jccvsmljl25a8u6517tlifoekq6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mafiagames.cardinalchains"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

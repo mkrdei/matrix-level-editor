@@ -1,12 +1,14 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
+using System;
 
 public class LevelLoader : MonoBehaviour
 {
     public GameObject tilePrefab;
     public int levelNumber = 1;
     public GameType gameType;
+    public List<Tile> tiles;
 
     void Start()
     {
@@ -27,30 +29,54 @@ public class LevelLoader : MonoBehaviour
         // Get the matrix data list from the level data
         List<object> matrixDataList = levelData["matrixDataList"] as List<object>;
 
-        // Loop through the matrix data list to generate the tile objects
-        foreach (Dictionary<string, object> matrixData in matrixDataList)
+        // Get the tiles data from the first matrix data
+        List<object> firstMatrixTilesData = (matrixDataList[0] as Dictionary<string, object>)["tiles"] as List<object>;
+
+        // Loop through the tiles data to generate the tile objects
+        foreach (Dictionary<string, object> tileData in firstMatrixTilesData)
         {
-            // Get the tiles data from the matrix data
-            List<object> tilesData = matrixData["tiles"] as List<object>;
+            // Get the x and y values of the tile
+            int x = (int)(long)tileData["x"];
+            int y = (int)(long)tileData["y"];
 
-            // Loop through the tiles data to generate the tile objects
-            foreach (Dictionary<string, object> tileData in tilesData)
+            Vector3 tilePos = new Vector3(x, 0, y);
+            if (gameType == GameType.Pyramid)
             {
-                // Get the x and y values of the tile
-                int x = (int)(long)tileData["x"];
-                int y = (int)(long)tileData["y"];
+                // Shift tile positions for a pyramid look.
+                tilePos = TilePositionShifter.ShiftPosition(tilePos, midX, midY, 0.5f);
+            }
+
+            // Create the tile game object
+            GameObject tileObject = Instantiate(tilePrefab, transform);
+            tileObject.transform.localPosition = tilePos;
 
 
-                Vector3 tilePos = new Vector3(x, 0, y);
-                if (gameType == GameType.Pyramid)
+            Tile tile = tileObject.GetComponent<Tile>();
+            tiles.Add(tile);
+        }
+        // Set face types.
+        if (gameType == GameType.Pyramid)
+        {
+            int matrixIndex = 0;
+            foreach (Dictionary<string, object> matrixData in matrixDataList)
+            {
+                // Get the tiles data from the matrix data
+                List<object> tilesData = matrixData["tiles"] as List<object>;
+                int tileIndex = 0;
+
+                foreach (Dictionary<string, object> tileData in tilesData)
                 {
-                    // Shift tile positions for a pyramid look.
-                    tilePos = TilePositionShifter.ShiftPosition(tilePos, midX, midY, 0.5f);
+                    string type = (string)tileData["type"];
+                    int x = (int)(long)tileData["x"];
+                    int y = (int)(long)tileData["y"];
+                    Tile tile = tiles[tileIndex];
+                    tile.faces[matrixIndex].tileType = (TileType)Enum.Parse(typeof(TileType), type);
+                    tilesData = (matrixDataList[matrixIndex] as Dictionary<string, object>)["tiles"] as List<object>;
+                    tileIndex++;
                 }
-                // Create the tile game object
-                GameObject tile = Instantiate(tilePrefab, transform);
-                tile.transform.localPosition = tilePos;
+                matrixIndex++;
             }
         }
+        
     }
 }
